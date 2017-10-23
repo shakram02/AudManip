@@ -2,7 +2,7 @@ from scipy.io.wavfile import read, write
 from scipy.signal import resample
 import numpy as np
 import matplotlib.pyplot as plt
-from src.utils import bin_search_index
+from src.utils import bin_search_index, create_time_axis
 
 TARGET_SAMPLE_RATE = 8000
 
@@ -62,14 +62,16 @@ def quantize(sound_data: np.ndarray, levels):
 
 def main():
     base_path = "../assets/"
+    result_path = "../results/"
     from os import path
-    rate, sound_file = read(path.join(base_path, "woman1_wb.wav"))
-    time = [i / TARGET_SAMPLE_RATE for i in range(len(sound_file))]
 
+    rate, sound_file = read(path.join(base_path, "woman1_wb.wav"))
     resampled_data = resample_at(sound_file, rate, TARGET_SAMPLE_RATE)
-    plt.plot(time, sound_file)
-    plt.show()
     quantized = quantize(resampled_data, 256)
+
+    plt.plot(create_time_axis(sound_file, TARGET_SAMPLE_RATE), sound_file)
+    # plt.savefig(path.join(result_path, "original"))
+    plt.show()
 
     write(path.join(base_path, "woman1_wb_quantized.wav"), TARGET_SAMPLE_RATE, quantized)
 

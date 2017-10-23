@@ -36,3 +36,7 @@ def bin_search_index(sorted_array, value, base_index=None):
     if value > array_mid:
         # Search the upper half
         return bin_search_index(sorted_array[mid_len:], base_index + mid_len)
+
+
+def create_time_axis(sound_data, sample_rate):
+    return [i / sample_rate for i in range(len(sound_data))]
