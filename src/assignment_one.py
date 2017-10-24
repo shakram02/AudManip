@@ -69,17 +69,33 @@ def q_3(sound_data, base_path):
     uniform_quantized, err_pwr2 = quantize(sound_data, 256)
     sample_count = len(sound_data)
     print("Uniform mean err:", err_pwr2 / sample_count, " Using 256 levels")
+    m_errs = []
+    a_errs = []
+    a_lvls = [10, 87.6, 1000]
+    m_lvls = [10, 255, 1000]
+    lvl_vals = zip(a_lvls, m_lvls)
 
-    for (a_lvls, m_lvls) in [(10, 10), (87.6, 255), (1000, 1000)]:
-        a_law_compander = src.comapanders.ALawCompander(a_lvls)
+    for (a_lvl, m_lvl) in lvl_vals:
+        a_law_compander = src.comapanders.ALawCompander(a_lvl)
         a_law_signal, a_law_sq_err = a_law_compander.encode(sound_data)
+        a_errs.append(a_law_sq_err)
 
-        m_law_compander = src.comapanders.MLawCompander(m_lvls)
+        m_law_compander = src.comapanders.MLawCompander(m_lvl)
         m_law_signal, m_law_sq_err = m_law_compander.encode(sound_data)
-        print("A-Law mean err:", a_law_sq_err / sample_count, " at A:", a_lvls)
-        print("M-Law mean err:", m_law_sq_err / sample_count, " at M:", m_lvls)
+        m_errs.append(m_law_sq_err)
+        print("A-Law mean err:", a_law_sq_err / sample_count, " at A:", a_lvl)
+        print("M-Law mean err:", m_law_sq_err / sample_count, " at M:", m_lvl)
+        if a_lvl == 87.6:
+            write(path.join(base_path, "woman1_wb_quantized_a_87_6.wav"),
+                  TARGET_SAMPLE_RATE, uniform_quantized)
 
-        # write(path.join(base_path, "woman1_wb_quantized.wav"), TARGET_SAMPLE_RATE, uniform_quantized)
+    plt.plot(a_lvls, a_errs, 'r*', m_lvls, m_errs, 'gs')
+    plt.savefig(path.join(base_path, "m_law_a_law_errs.png"))
+    plt.close()
+    # 0 is the mean of the normal distribution you are choosing from
+    # 1 is the standard deviation of the normal distribution
+    # 100 is the number of elements you get in array noise
+    noise = np.random.normal(0, 1, 100)
 
 
 def main():
@@ -88,11 +104,15 @@ def main():
 
     rate, sound_file = read(path.join(base_path, "woman1_wb.wav"))
     resampled_data = resample_at(sound_file, rate, TARGET_SAMPLE_RATE)
-    q_3(resampled_data, base_path)
+    q_3(resampled_data, result_path)
 
-    plt.plot(create_time_axis(sound_file, TARGET_SAMPLE_RATE), sound_file)
-    # plt.savefig(path.join(result_path, "original"))
-    plt.show()
+    plt.plot(create_time_axis(sound_file, rate), sound_file)
+    plt.savefig(path.join(result_path, "original.png"))
+    plt.close()
+
+    plt.plot(create_time_axis(resampled_data, TARGET_SAMPLE_RATE), resampled_data)
+    plt.savefig(path.join(result_path, "resampled.png"))
+    plt.close()
 
 
 if __name__ == "__main__":
