@@ -1,9 +1,11 @@
+from os import path
+
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.io.wavfile import read, write
 from scipy.signal import resample
-import numpy as np
-import matplotlib.pyplot as plt
+
 from src.utils import bin_search_index, create_time_axis
-from os import path
 
 TARGET_SAMPLE_RATE = 8000
 
@@ -25,8 +27,8 @@ def resample_at(sound_data, src_sample_rate, out_sample_rate):
     return np.array([x / sample_count for x in data])
 
 
-def quantize(sound_data: np.ndarray, levels):
-    min_val, max_val = sound_data.min(), sound_data.max()
+def uniform_quantize(sound_data, levels):
+    min_val, max_val = min(sound_data), max(sound_data)
     delta = (max_val - min_val) / levels
     quantization_values = [(i + 1) * delta for i in range(levels)]
 
@@ -66,16 +68,19 @@ def quantize(sound_data: np.ndarray, levels):
 def q_3(sound_data, base_path):
     import src.comapanders
 
-    uniform_quantized, err_pwr2 = quantize(sound_data, 256)
+    uniform_quantized, err_pwr2 = uniform_quantize(sound_data, 256)
     sample_count = len(sound_data)
     print("Uniform mean err:", err_pwr2 / sample_count, " Using 256 levels")
+
     m_errs = []
     a_errs = []
+
     a_lvls = [10, 87.6, 1000]
     m_lvls = [10, 255, 1000]
     lvl_vals = zip(a_lvls, m_lvls)
 
     for (a_lvl, m_lvl) in lvl_vals:
+
         a_law_compander = src.comapanders.ALawCompander(a_lvl)
         a_law_signal, a_law_sq_err = a_law_compander.encode(sound_data)
         a_errs.append(a_law_sq_err)
@@ -83,8 +88,10 @@ def q_3(sound_data, base_path):
         m_law_compander = src.comapanders.MLawCompander(m_lvl)
         m_law_signal, m_law_sq_err = m_law_compander.encode(sound_data)
         m_errs.append(m_law_sq_err)
+
         print("A-Law mean err:", a_law_sq_err / sample_count, " at A:", a_lvl)
         print("M-Law mean err:", m_law_sq_err / sample_count, " at M:", m_lvl)
+
         if a_lvl == 87.6:
             write(path.join(base_path, "woman1_wb_quantized_a_87_6.wav"),
                   TARGET_SAMPLE_RATE, uniform_quantized)
@@ -92,6 +99,7 @@ def q_3(sound_data, base_path):
     plt.plot(a_lvls, a_errs, 'r*', m_lvls, m_errs, 'gs')
     plt.savefig(path.join(base_path, "m_law_a_law_errs.png"))
     plt.close()
+
     # 0 is the mean of the normal distribution you are choosing from
     # 1 is the standard deviation of the normal distribution
     # 100 is the number of elements you get in array noise
