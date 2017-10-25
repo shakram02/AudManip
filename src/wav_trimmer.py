@@ -26,5 +26,5 @@ def main():
     trim(sound_file, ratio, new_path)
 
 
-if __name__ == "-_main__":
+if __name__ == "__main__":
     main()
