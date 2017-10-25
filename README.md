@@ -7,6 +7,8 @@ Simple scripts to manipulate audio, it can
     - Uniform
     - Companding Using [A-Law](https://en.wikipedia.org/wiki/A-law_algorithm)
     - Companding Using [M-Law](https://en.wikipedia.org/wiki/%CE%9C-law_algorithm)
+- Sine wave generation
+- Audio amplification
 
 ### Dependencies
 
