@@ -2,18 +2,10 @@ import math
 
 
 class Compander:
-    def encode(self, sound_data):
-        result = []
-        error = 0
+    def encode(self, sample):
+        raise NotImplementedError()
 
-        for sample in sound_data:
-            quantized, sample_err = self._encode_sample(sample)
-            result.append(quantized)
-            error += sample_err ** 2
-
-        return result, error
-
-    def _encode_sample(self, sample):
+    def decode(self, sample):
         raise NotImplementedError()
 
 
@@ -24,8 +16,8 @@ class ALawCompander(Compander):
         self._ONE_PLUS_LN_A = 1.0 + math.log(self._A)
         self._sign = lambda x: math.copysign(1, x)
 
-    def _encode_sample(self, x):
-        abs_x = math.fabs(x)
+    def encode(self, sample):
+        abs_x = math.fabs(sample)
 
         if abs_x < self._A_INV:
             # ( A * |X| ) / (1 + ln(A)) 0<= |X| <= 1/A
@@ -34,8 +26,11 @@ class ALawCompander(Compander):
             # ( sign(x) *(1 + ln(A * |X|)) / (1 + ln(A)) 1/A<= |X| <= 1
             y = (1.0 + math.log(self._A * abs_x)) / self._ONE_PLUS_LN_A
 
-        sampled = self._sign(x) * y
-        return sampled, (x - sampled) ** 2
+        sampled = self._sign(sample) * y
+        return sampled, (sample - sampled) ** 2
+
+    def decode(self, sample):
+        pass
 
 
 class MLawCompander(Compander):
@@ -44,10 +39,13 @@ class MLawCompander(Compander):
         self._LN_ONE_PLUS_M = math.log(1.0 + self._M)
         self._sign = lambda x: math.copysign(1, x)
 
-    def _encode_sample(self, x):
+    def encode(self, sample):
         # f(x) = (sign(x)*ln(1+ m*|x|)) / ln(1+m)
-        abs_x = math.fabs(x)
+        abs_x = math.fabs(sample)
         y = math.log(1 + self._M * abs_x) / self._LN_ONE_PLUS_M
 
-        sampled = self._sign(x) * y
-        return sampled, (x - sampled) ** 2
+        sampled = self._sign(sample) * y
+        return sampled, (sample - sampled) ** 2
+
+    def decode(self, sample):
+        pass

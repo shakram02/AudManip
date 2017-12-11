@@ -1,3 +1,7 @@
+import numpy as np
+from scipy.signal import resample
+
+
 def bin_search_index(sorted_array, value, base_index=None):
     """
     Finds the quantization level closest to the given value and
@@ -40,3 +44,20 @@ def bin_search_index(sorted_array, value, base_index=None):
 
 def create_time_axis(sound_data, sample_rate):
     return [i / sample_rate for i in range(len(sound_data))]
+
+
+def resample_at(sound_data, src_sample_rate, out_sample_rate):
+    """
+    Calculates the number of points in a resampled audio file
+    :param sound_data: Source file
+    :param src_sample_rate: Intput sampling rate
+    :param out_sample_rate: Desired output sampling rate
+    :return: Number of data points that should be present
+    """
+
+    len_seconds = len(sound_data) / src_sample_rate
+    sample_count = int(out_sample_rate * len_seconds)
+    data = resample(sound_data, sample_count).tolist()
+
+    # FIXME: why do we have to divide by sample count?
+    return np.array([x / sample_count for x in data])

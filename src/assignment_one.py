@@ -3,28 +3,9 @@ from os import path
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.io.wavfile import read, write
-from scipy.signal import resample
-
-from src.utils import bin_search_index, create_time_axis
+from src.utils import bin_search_index, create_time_axis, resample_at
 
 TARGET_SAMPLE_RATE = 8000
-
-
-def resample_at(sound_data, src_sample_rate, out_sample_rate):
-    """
-    Calculates the number of points in a resampled audio file
-    :param sound_data: Source file
-    :param src_sample_rate: Intput sampling rate
-    :param out_sample_rate: Desired output sampling rate
-    :return: Number of data points that should be present
-    """
-
-    len_seconds = len(sound_data) / src_sample_rate
-    sample_count = int(out_sample_rate * len_seconds)
-    data = resample(sound_data, sample_count).tolist()
-
-    # FIXME: why do we have to divide by sample count?
-    return np.array([x / sample_count for x in data])
 
 
 def uniform_quantize(sound_data, levels):
@@ -82,10 +63,13 @@ def q_3(sound_data, base_path):
     for (a_lvl, m_lvl) in lvl_vals:
 
         a_law_compander = src.comapanders.ALawCompander(a_lvl)
+
+        # TODO Adapt to new interface, single sample encoding
         a_law_signal, a_law_sq_err = a_law_compander.encode(sound_data)
         a_errs.append(a_law_sq_err)
 
         m_law_compander = src.comapanders.MLawCompander(m_lvl)
+        # TODO Adapt to new interface, single sample encoding
         m_law_signal, m_law_sq_err = m_law_compander.encode(sound_data)
         m_errs.append(m_law_sq_err)
 
